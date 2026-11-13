@@ -192,7 +192,9 @@
           dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
           frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
           codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
-          streamingAssetsUrl: buildUrl + 'StreamingAssets',
+          streamingAssetsUrl: buildUrl + 'StreamingAssets/',
+matchWebGLToCanvasSize: true,
+devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),,
           companyName: 'CrazyGames',
           productName: 'Toilets Worms Shooter',
           productVersion: '2'
@@ -208,7 +210,6 @@
           unityInstance = instance;
           window.unityInstance = instance;
           loading.classList.add('hidden');
-          resizeGame();
         }).catch(error => showError(error?.message || String(error)));
       } catch (error) {
         showError(error?.message || String(error));
@@ -221,11 +222,6 @@
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
     document.head.appendChild(loader);
 
-    function resizeGame() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(canvas.clientWidth * ratio);
-      canvas.height = Math.round(canvas.clientHeight * ratio);
-    }
     window.addEventListener('resize', resizeGame);
     window.addEventListener('orientationchange', () => setTimeout(resizeGame, 150));
 
