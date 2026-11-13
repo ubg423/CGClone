@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Docs</title>
+	<meta name="description" content="ubg42 Play Games Here, Over 200+ Unblocked Games Available Including Slope, Soflo Wheelie Life, Among Us, and More!"/>
+  <link rel="shortcut icon" href="Docs.ico" type="image/ico">
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-image: url('Grey.png');
+      overflow-y: auto;
+    }
+      .g-recaptcha {
+  display: flex;
+  justify-content: center; /* Horizontal centering */
+  align-items: center;     /* Vertical centering */
+  height: 100vh;  
+           /* Required if you want to center on the whole page */
+}
+    header {
+      background: #383838;
+      padding: 10px 20px;
+      color: white;
+      position: relative;
+      height: 60px;
+    }
+
+    #searchBar {
+      font-size: 16px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: none;
+      width: 200px;
+      position: absolute;
+      top: 25px;
+      left: 20px;
+    }
+
+    .button  {
+      font-size: 28px;
+      position: absolute;
+      top: 18px;
+      left: 320px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .form {
+      font-size: 28px;
+      text-decoration: underline;
+      position: absolute;
+      top: 5px;
+      left: 660px;
+      text-align: right;
+	  cursor: pointer;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+    }
+
+    .game-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .game-card h3 {
+      margin: 10px;
+    }
+
+    footer {
+      background: #383838;
+      color: white;
+      text-align: center;
+      padding: 15px 20px;
+      font-size: 16px;
+    }
+
+    .footer-text {
+      margin: 0;
+    }
+	
+    .phone, .ipad {
+    color: white;    
+    }
+	    button {
+      padding: 2px 7px;
+      font-size: 2px;
+      border: 2px solid white;
+      border-radius: 10px;
+      background: #383838;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+        .button:hover {
+      transform: scale(1.02);
+    }
+	.rainbow-text{
+    font-size:16px;
+    font-weight:bold;
+    font-family:Arial, sans-serif;
+	    margin: 0;
+       cursor: pointer;
+    background: linear-gradient(
+        90deg,
+        red,
+        orange,
+        yellow,
+        lime,
+        cyan,
+        blue,
+        violet,
+        red
+    );
+
+    background-size:400%;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+
+    animation:rainbow 8s linear infinite;
+}
+
+@keyframes rainbow{
+    0%{
+        background-position:0%;
+    }
+    100%{
+        background-position:400%;
+    }
+}
+	.rainbow-text-creator{
+    font-size:30px;
+    font-weight:bold;
+    font-family:Arial, sans-serif;
+	    margin: 0;
+      position: absolute;
+      top: 25px;
+      left: 1164px;
+      text-align: right;
+	  cursor: pointer;
+
+    background: linear-gradient(
+        90deg,
+        red,
+        orange,
+        yellow,
+        lime,
+        cyan,
+        blue,
+        violet,
+        red
+    );
+
+    background-size:400%;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+
+    animation:rainbow 8s linear infinite;
+}
+
+@keyframes rainbow{
+    0%{
+        background-position:0%;
+    }
+    100%{
+        background-position:400%;
+    }
+}
+.particle {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999999;
+}
+
+    .mc-text {
+  font-family: "Pixelify Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+        color: #ffff00;
+		display: inline-block;
+		position: absolute;
+        left: 1070px;   /* move horizontally */
+        top: 35px;    /* move vertically */
+		white-space: nowrap;
+		  font-style: normal;
+
+
+        text-shadow: 1px 1px 0 #000;
+
+        /* start tilted */
+        transform: rotate(-15deg);
+
+        animation: splash 1.2s infinite ease-in-out;
+    }
+
+    /* Minecraft-style splash wobble */
+    @keyframes splash {
+        0% {
+            transform: rotate(-15deg) scale(0.95) translateY(0px);
+        }
+
+        25% {
+            transform: rotate(-15deg) scale(1.15) translateY(0px);
+        }
+
+        50% {
+            transform: rotate(-15deg) scale(0.95) translateY(0px);
+        }
+
+        75% {
+            transform: rotate(-15deg) scale(1.2) translateY(0px);
+        }
+
+        100% {
+            transform: rotate(-15deg) scale(0.95) translateY(0px);
+        }
+    }
+  </style>
+  
+</head>
+<body>
+<header>
+	  <p class="rainbow-text-creato">Creator</p>
+<input id="searchBar" type="text" placeholder="Search...">
+
+<style>
+#searchBar {
+  background-color: #222;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 10px;
+  padding: 9px;
+}
+
+#searchBar::placeholder {
+  color: #aaa;
+}
+</style>
+
+
+
+</header>
+<div class="game-grid" id="gameGrid">
+      <div class="game-card" onclick="openGame('https://ubg42.github.io/67/', 'Google Docs')">
+	  <img src="./img/LiquidSwarm.jpg" alt="Liquid Swarm">
+	  <h3>Liquid Swarm</h3>
+	</div>
+	<div class="game-card" onclick="openGame('https://fridaynight-funkin.github.io/f6/stickman-bike/', 'Google Docs')">
+      <img src="./img/MXOffroad.jpg" alt="MX Offroad Master">
+      <h3>MX Offroad Master</h3>
+    </div>
+    <div class="game-card" onclick="openGame('https://htmlxm.github.io/h7/moto-road-rash-3d/', 'Google Docs')">
+      <img src="./img/MachinEgg.png.jpg" alt="Machin Egg">
+      <h3>Machin Egg</h3>
+    </div>
+	  <div class="game-card" onclick="openGame('https://ubg42.github.io/file/The_Impossible_Quiz.html', 'Google Docs')">
+		<img src="./img/SkyRiders.jpg" alt="Sky Riders">
+		<h3>Sky Riders</h3>
+	</div>
+	<div class="game-card" onclick="openGame('https://ubg42.github.io/file/The_Impossible_Quiz_Hacked.html', 'Google Docs')">
+		<img src="./img/TimeControl.jpg" alt="Time Control">
+		<h3>Time Control</h3>
+	</div>
+	<div class="game-card" onclick="openGame('https://slopenexus.github.io/games/v1.2.5/index.html', 'Google Docs')">
+		<img src="./img/WaveFlip.jpg" alt="Wave Flip">
+		<h3>Wave Flip</h3>
+	  </div>
+	</div>
+	<footer>
+  <p class="footer-text">Contact: ubg423@gmail.com 
+  </p>
+    <p class="footer-text">© 2026 All rights reserved.
+  </p>
+</footer>
+<script>
+function openGame(url, title) {
+  var newTab = window.open('about:blank', '_blank');
+  newTab.document.write(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Google Docs</title>
+      <style>
+        body { margin: 0; overflow: hidden; }
+        iframe { width: 100vw; height: 100vh; border: none; }
+      </style>
+    </head>
+    <body>
+      <iframe src="${url}" frameborder="0"></iframe>
+    </body>
+    </html>
+  `);
+  newTab.document.close();
+}
+</script>
+<script>
+const rainbowElements = document.querySelectorAll(
+    '.rainbow-text, .rainbow-text-creator, [class*="rainbow-text"]'
+);
+
+rainbowElements.forEach(text => {
+
+    text.style.cursor = "pointer";
+
+    let clicked = false;
+
+    text.addEventListener("click", () => {
+
+        // stop THIS text from being clicked again
+        if (clicked) return;
+
+        clicked = true;
+
+        // disable only this one
+        text.style.pointerEvents = "none";
+        text.style.cursor = "default";
+
+        // disappear effect
+        text.classList.add("disappear");
+    });
+
+});
+</script>
+<style>
+.disappear{
+    animation: vanish 1s forwards;
+}
+
+@keyframes vanish{
+    0%{
+        opacity:1;
+        transform:scale(1);
+    }
+
+    100%{
+        opacity:0;
+        transform:scale(0);
+    }
+}
+</style>
+</body>
+</html>   
