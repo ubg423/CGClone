@@ -197,7 +197,11 @@ const config = {
   productName: 'MX Offroad',
   productVersion: '1.0',
   matchWebGLToCanvasSize: true,
-  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+  webglContextAttributes: {
+    preserveDrawingBuffer: false,
+    powerPreference: 'default'
+  }
 };
         if (typeof createUnityInstance !== 'function') {
           throw new Error('Unity loader loaded, but createUnityInstance was not found.');
