@@ -188,28 +188,36 @@
         const frameworkBytes = await decompressIfBrotli(frameworkReceived, brotli, 'FRAMEWORK', isReadableText);
 
         setProgress(88, 'Preparing Unity...');
-        const config = {
-          dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
-          frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
-          codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
-          streamingAssetsUrl: buildUrl + 'StreamingAssets',
-          companyName: 'CrazyGames',
-          productName: 'Toilets Worms Shooter',
-          productVersion: '2'
-        };
-
+const config = {
+  dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
+  frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
+  codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
+  streamingAssetsUrl: buildUrl + 'StreamingAssets/',
+  companyName: 'MX Offroad',
+  productName: 'MX Offroad',
+  productVersion: '1.0',
+  matchWebGLToCanvasSize: true,
+  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+};
         if (typeof createUnityInstance !== 'function') {
           throw new Error('Unity loader loaded, but createUnityInstance was not found.');
         }
 
         createUnityInstance(canvas, config, progress => {
           setProgress(88 + progress * 12, 'Starting game... ' + Math.round(progress * 100) + '%');
-        }).then(instance => {
-          unityInstance = instance;
-          window.unityInstance = instance;
-          loading.classList.add('hidden');
-          resizeGame();
-        }).catch(error => showError(error?.message || String(error)));
+}).then(instance => {
+  unityInstance = instance;
+  window.unityInstance = instance;
+
+  loading.classList.add('hidden');
+
+  resizeGame();
+
+  console.log("Unity initialized successfully");
+  console.log("Canvas:", canvas.width, canvas.height);
+  console.log("Unity instance:", instance);
+  console.log("WebGL:", canvas.getContext('webgl2') || canvas.getContext('webgl'));
+}).catch(error => showError(error?.message || String(error)));
       } catch (error) {
         showError(error?.message || String(error));
       }
@@ -221,11 +229,21 @@
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
     document.head.appendChild(loader);
 
-    function resizeGame() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(canvas.clientWidth * ratio);
-      canvas.height = Math.round(canvas.clientHeight * ratio);
-    }
+ function resizeGame() {
+  const container = document.getElementById('game-container');
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+
+  canvas.width = Math.round(container.clientWidth * ratio);
+  canvas.height = Math.round(container.clientHeight * ratio);
+
+  if (unityInstance && unityInstance.Module) {
+    unityInstance.Module.canvas.width = canvas.width;
+    unityInstance.Module.canvas.height = canvas.height;
+  }
+}
     window.addEventListener('resize', resizeGame);
     window.addEventListener('orientationchange', () => setTimeout(resizeGame, 150));
 
