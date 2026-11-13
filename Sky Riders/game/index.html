@@ -188,18 +188,19 @@
         const frameworkBytes = await decompressIfBrotli(frameworkReceived, brotli, 'FRAMEWORK', isReadableText);
 
         setProgress(88, 'Preparing Unity...');
-        const config = {
-          dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
-          frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
-          codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
-          streamingAssetsUrl: buildUrl + 'StreamingAssets/',
-matchWebGLToCanvasSize: true,
-devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),,
-          companyName: 'CrazyGames',
-          productName: 'Toilets Worms Shooter',
-          productVersion: '2'
-        };
+const config = {
+  dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
+  frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
+  codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
 
+  streamingAssetsUrl: buildUrl + 'StreamingAssets/',
+  matchWebGLToCanvasSize: true,
+  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+
+  companyName: 'CrazyGames',
+  productName: 'Toilets Worms Shooter',
+  productVersion: '2'
+};
         if (typeof createUnityInstance !== 'function') {
           throw new Error('Unity loader loaded, but createUnityInstance was not found.');
         }
