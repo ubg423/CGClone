@@ -223,8 +223,7 @@ const config = {
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
     document.head.appendChild(loader);
 
-    window.addEventListener('resize', resizeGame);
-    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 150));
+
 
     document.getElementById('fullscreen').addEventListener('click', async () => {
       try {
@@ -237,7 +236,6 @@ const config = {
     });
     document.addEventListener('fullscreenchange', () => {
       document.getElementById('fullscreen').textContent = document.fullscreenElement ? '✕ Exit fullscreen' : '⛶ Fullscreen';
-      setTimeout(resizeGame, 100);
     });
     window.addEventListener('beforeunload', () => temporaryUrls.forEach(url => URL.revokeObjectURL(url)));
   </script>
