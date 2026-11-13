@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480"
+                 width="240" height="240" role="img" aria-label="Click to spawn">
+    <defs>
+        <filter id="cursorShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.28" />
+        </filter>
+        <style>
+            /* ===== TIMING: one full click loop = 1.8s ===== */
+            #clicker { animation: press  1.8s ease-in-out infinite; }
+            #ripple  { animation: ripple 1.8s ease-out    infinite; transform-origin: 0 0; }
+            #ripple2 { animation: ripple 1.8s ease-out    infinite; transform-origin: 0 0; }
+
+            /* cursor dips along its axis on the click */
+            @keyframes press {
+            0%, 12% { transform: translate(0, 0); }
+            18%     { transform: translate(4px, 4px); }
+            30%     { transform: translate(0, 0); }
+            100%    { transform: translate(0, 0); }
+            }
+            /* ripple pulse from the cursor tip */
+            @keyframes ripple {
+            0%, 12% { transform: scale(0.2); opacity: 0; }
+            20%     { transform: scale(1);   opacity: 0.9; }
+            46%     { transform: scale(2);   opacity: 0; }
+            100%    { transform: scale(2);   opacity: 0; }
+            }
+        </style>
+    </defs>
+
+    <!-- ripple sits at the cursor tip (the hotspot / click point) -->
+    <g transform="translate(200,155)">
+        <circle id="ripple"  cx="0" cy="0" r="15" fill="none" stroke="#38bdf8" stroke-width="3" />
+        <circle id="ripple2" cx="0" cy="0" r="8"  fill="#38bdf8" opacity="0.18" />
+    </g>
+
+    <!-- arrow cursor (tip at 200,155), nudges down-right on click -->
+    <g id="clicker" filter="url(#cursorShadow)">
+        <path transform="translate(200,155)"
+              d="M 0 0
+                         L 0 136
+                         L 36 104
+                         L 60 160
+                         L 84 148
+                         L 60 92
+                         L 104 92
+                         Z"
+              fill="#ffffff" stroke="#cbd5e1" stroke-width="4"
+              stroke-linejoin="round" />
+    </g>
+</svg>
