@@ -214,67 +214,53 @@ console.log(
           throw new Error('Unity loader loaded, but createUnityInstance was not found.');
         }
 
-console.log("Starting Unity initialization...");
+        console.log("Starting Unity initialization...");
 
-let initializationFinished = false;
+        let initializationFinished = false;
 
-const timeout = setTimeout(function() {
-    if (!initializationFinished) {
-        console.error("Unity initialization is taking longer than 60 seconds.");
-        statusText.textContent = "Unity is taking longer than expected...";
-    }
-}, 60000);
+        const timeout = setTimeout(function() {
+          if (!initializationFinished) {
+            console.error("Unity initialization is taking longer than 60 seconds.");
+            statusText.textContent = "Unity is taking longer than expected...";
+          }
+        }, 60000);
 
-createUnityInstance(canvas, config, progress => {
-  setProgress(
-    88 + progress * 12,
-    'Starting game... ' + Math.round(progress * 100) + '%'
-  );
-}).then(instance => {
+        createUnityInstance(canvas, config, progress => {
+          setProgress(
+            88 + progress * 12,
+            'Starting game... ' + Math.round(progress * 100) + '%'
+          );
+        }).then(instance => {
+          initializationFinished = true;
+          clearTimeout(timeout);
 
-  initializationFinished = true;
-  clearTimeout(timeout);
+          console.log("UNITY INITIALIZED SUCCESSFULLY");
 
-  console.log("UNITY INITIALIZED SUCCESSFULLY");
-
-  unityInstance = instance;
-  window.unityInstance = instance;
-
-  loading.classList.add('hidden');
-  resizeGame();
-
-}).catch(error => {
-
-  initializationFinished = true;
-  clearTimeout(timeout);
-
-  console.error("UNITY INITIALIZATION FAILED:", error);
-
-  showError(error?.message || String(error));
-});
           unityInstance = instance;
-          console.log("UNITY INSTANCE CREATED");
           window.unityInstance = instance;
+
           loading.classList.add('hidden');
           resizeGame();
-        }).catch(error => showError(error?.message || String(error)));
+
+        }).catch(error => {
+          initializationFinished = true;
+          clearTimeout(timeout);
+
+          console.error("UNITY INITIALIZATION FAILED:", error);
+          showError(error?.message || String(error));
+        });
+
       } catch (error) {
-        showError(error?.message || String(error));\
-        }).then(instance => {
-    console.log("UNITY INITIALISED SUCCESSFULLY");
-
-    unityInstance = instance;
-    window.unityInstance = instance;
-
-    loading.classList.add('hidden');
-    resizeGame();
-
-}).catch(error => {
-    console.error("UNITY INITIALISATION FAILED:", error);
-    showError(error?.message || String(error));
-});
+        console.error("GAME LOADING FAILED:", error);
+        showError(error?.message || String(error));
       }
     }
+
+    const loader = document.createElement('script');
+    loader.src = LOADER_FILE;
+    loader.onload = startGame;
+    loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
+    document.head.appendChild(loader);
 
     const loader = document.createElement('script');
     loader.src = LOADER_FILE;
