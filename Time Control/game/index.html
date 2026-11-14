@@ -30,6 +30,10 @@
     </div>
     <button id="fullscreen" type="button">⛶ Fullscreen</button>
     <div id="error"></div>
+    <div id="sdk-environment"
+     style="color:yellow;font-size:14px;">
+  Checking CrazyGames SDK...
+</div>
   </main>
 
   <script>
@@ -40,6 +44,13 @@
     const progressBar = document.getElementById('progress-bar');
     const statusText = document.getElementById('status');
     const errorBox = document.getElementById('error');
+    const sdkEnvironment =
+  window.CrazyGames?.SDK?.environment || 'SDK not detected';
+
+document.getElementById('sdk-environment').textContent =
+  'CrazyGames environment: ' + sdkEnvironment;
+
+console.log('CrazyGames environment:', sdkEnvironment);
     const fullscreenButton = document.getElementById('fullscreen');
 
     const buildUrl = './Build/';
