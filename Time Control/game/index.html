@@ -150,7 +150,11 @@ async function countParts(base) {
           blobs.push(blob);
         }
 
-        return new Blob(blobs);
+       const mimeType = base.includes(".wasm")
+  ? "application/wasm"
+  : "application/octet-stream";
+
+return new Blob(blobs, { type: mimeType });
       }
 
       async function loadAllParts() {
