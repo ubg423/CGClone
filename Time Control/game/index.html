@@ -212,7 +212,20 @@
           resizeGame();
         }).catch(error => showError(error?.message || String(error)));
       } catch (error) {
-        showError(error?.message || String(error));
+        showError(error?.message || String(error));\
+        }).then(instance => {
+    console.log("UNITY INITIALISED SUCCESSFULLY");
+
+    unityInstance = instance;
+    window.unityInstance = instance;
+
+    loading.classList.add('hidden');
+    resizeGame();
+
+}).catch(error => {
+    console.error("UNITY INITIALISATION FAILED:", error);
+    showError(error?.message || String(error));
+});
       }
     }
 
