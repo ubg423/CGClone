@@ -23,31 +23,33 @@
   <main id="game-container">
     <canvas id="unity-canvas" tabindex="-1"></canvas>
     <div id="loading">
-      <div id="loading-title">Loading Game...</div>
+      <div id="loading-title">Loading Time Control...</div>
       <div id="progress-track"><div id="progress-bar"></div></div>
-      <div id="status">Starting game...</div>
+      <div id="status">Preparing game...</div>
     </div>
-    <button id="fullscreen"></button>
+    <button id="fullscreen" type="button">⛶ Fullscreen</button>
     <div id="error"></div>
   </main>
 
   <script>
+    'use strict';
+
     const canvas = document.getElementById('unity-canvas');
     const loading = document.getElementById('loading');
     const progressBar = document.getElementById('progress-bar');
     const statusText = document.getElementById('status');
     const errorBox = document.getElementById('error');
+    const fullscreenButton = document.getElementById('fullscreen');
 
     const buildUrl = './Build/';
 
-    // The DATA chunks are expected beside the loader in Build/:
-    // WormsToiletsShooter_Crazy.data.br.part001 ... part002
+    // Expected files in Build/:
+    // TCT_0_3_2_CG3.data.br.part001, .part002, .part003
     const DATA_BASE = buildUrl + 'TCT_0_3_2_CG3.data.br';
     const DATA_PARTS = 3;
 
-    // The three compiled WASM chunks are now stored directly in Build/ (not
-    // inside a separate 'WASM files' folder). Expected names:
-    // Build/WormsToiletsShooter_Crazy_compiled.wasm.part001 ... part004
+    // Expected files in Build/:
+    // TCT_0_3_2_CG3.wasm.br.part001, .part002, .part003
     const WASM_BASE = buildUrl + 'TCT_0_3_2_CG3.wasm.br';
     const WASM_PARTS = 3;
 
@@ -56,6 +58,7 @@
 
     const temporaryUrls = [];
     let unityInstance = null;
+    let startGameCalled = false;
 
     function setProgress(percent, message) {
       progressBar.style.width = Math.max(0, Math.min(100, percent)) + '%';
@@ -66,6 +69,7 @@
       errorBox.style.display = 'block';
       errorBox.textContent = 'The game could not be loaded.\n\n' + message;
       statusText.textContent = 'Loading failed.';
+      console.error('TIME CONTROL LOAD ERROR:', message);
     }
 
     function startsWithBytes(bytes, signature) {
@@ -85,7 +89,8 @@
 
     async function fetchPart(baseFile, number, total) {
       const suffixes = [String(number).padStart(3, '0'), String(number).padStart(2, '0')];
-      let lastError;
+      let lastError = null;
+
       for (const suffix of suffixes) {
         const url = baseFile + '.part' + suffix;
         try {
@@ -95,8 +100,10 @@
             if (response.status === 404) continue;
             throw lastError;
           }
+
           const bytes = new Uint8Array(await response.arrayBuffer());
           if (!bytes.length) throw new Error('Part is empty: ' + url);
+          console.log('Downloaded', url, bytes.byteLength, 'bytes');
           return bytes;
         } catch (error) {
           lastError = error;
@@ -104,28 +111,41 @@
           throw error;
         }
       }
-      throw new Error('Missing part ' + number + ' of ' + total + '. Tried .part' + suffixes.join(' and .part') + ' for ' + baseFile + '. Last error: ' + (lastError?.message || 'not found'));
+
+      throw new Error(
+        'Missing part ' + number + ' of ' + total + '. Tried both .part' +
+        suffixes.join(' and .part') + ' for ' + baseFile + '. Last error: ' +
+        (lastError?.message || 'not found')
+      );
     }
 
     async function loadSplitFile(baseFile, count, label, startPercent, endPercent) {
       const chunks = new Array(count);
       let received = 0;
       let totalBytes = 0;
+
       for (let first = 1; first <= count; first += 4) {
         const last = Math.min(first + 3, count);
-        const results = await Promise.all(Array.from({ length: last - first + 1 }, (_, index) => {
-          const number = first + index;
-          return fetchPart(baseFile, number, count).then(bytes => ({ number, bytes }));
-        }));
+        const results = await Promise.all(
+          Array.from({ length: last - first + 1 }, (_, index) => {
+            const number = first + index;
+            return fetchPart(baseFile, number, count).then(bytes => ({ number, bytes }));
+          })
+        );
+
         for (const item of results) {
           chunks[item.number - 1] = item.bytes;
           received++;
           totalBytes += item.bytes.byteLength;
         }
+
         const fraction = received / count;
-        setProgress(startPercent + fraction * (endPercent - startPercent),
-          'Downloading ' + label + ' parts: ' + received + '/' + count);
+        setProgress(
+          startPercent + fraction * (endPercent - startPercent),
+          'Downloading ' + label + ' parts: ' + received + '/' + count
+        );
       }
+
       const joined = new Uint8Array(totalBytes);
       let offset = 0;
       for (const chunk of chunks) {
@@ -133,6 +153,8 @@
         joined.set(chunk, offset);
         offset += chunk.byteLength;
       }
+
+      console.log(label + ' joined size:', joined.byteLength, 'bytes');
       return joined;
     }
 
@@ -149,162 +171,184 @@
 
     async function decompressIfBrotli(bytes, brotli, label, rawCheck) {
       if (rawCheck(bytes)) return bytes;
+
       try {
         const output = new Uint8Array(brotli.decompress(bytes));
         if (!output.length) throw new Error('Decompression produced an empty file.');
+        console.log(label + ' decompressed size:', output.byteLength, 'bytes');
         return output;
       } catch (error) {
         if (isReadableText(bytes)) return bytes;
-        throw new Error(label + ' is neither the expected raw file nor a valid complete Brotli stream. ' + error.message);
-      }
-    }
-
-    aasync function startGame() {
-  let initTimeout = null;
-
-  try {
-    setProgress(1, 'Loading Brotli decoder...');
-    const brotli = await getBrotliDecoder();
-
-    setProgress(3, 'Downloading DATA parts...');
-    const dataReceived = await loadSplitFile(
-      DATA_BASE, DATA_PARTS, 'DATA', 3, 35
-    );
-
-    const dataBytes = await decompressIfBrotli(
-      dataReceived,
-      brotli,
-      'DATA',
-      bytes => startsWithBytes(bytes, [
-        0x55,0x6E,0x69,0x74,0x79,0x57,0x65,
-        0x62,0x44,0x61,0x74,0x61,0x31,0x2E,0x30
-      ])
-    );
-
-    setProgress(36, 'Downloading WASM parts...');
-    const wasmReceived = await loadSplitFile(
-      WASM_BASE, WASM_PARTS, 'WASM', 36, 72
-    );
-
-    const wasmBytes = await decompressIfBrotli(
-      wasmReceived,
-      brotli,
-      'WASM',
-      bytes => startsWithBytes(bytes, [0x00,0x61,0x73,0x6D])
-    );
-
-    if (!startsWithBytes(wasmBytes, [0x00,0x61,0x73,0x6D])) {
-      throw new Error('Invalid WebAssembly file. Check your WASM parts.');
-    }
-
-    setProgress(73, 'Downloading Unity framework...');
-
-    const frameworkResponse = await fetch(FRAMEWORK_FILE, {
-      cache: 'no-store'
-    });
-
-    if (!frameworkResponse.ok) {
-      throw new Error(
-        'Could not fetch framework: HTTP ' + frameworkResponse.status
-      );
-    }
-
-    const frameworkReceived = new Uint8Array(
-      await frameworkResponse.arrayBuffer()
-    );
-
-    const frameworkBytes = await decompressIfBrotli(
-      frameworkReceived,
-      brotli,
-      'FRAMEWORK',
-      isReadableText
-    );
-
-    console.log('DATA decompressed:', dataBytes.length);
-    console.log('WASM decompressed:', wasmBytes.length);
-    console.log('FRAMEWORK decompressed:', frameworkBytes.length);
-
-    setProgress(88, 'Preparing Unity...');
-
-    const config = {
-      dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
-      frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
-      codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
-      streamingAssetsUrl: buildUrl + 'StreamingAssets',
-      companyName: 'CrazyGames',
-      productName: 'Time Control',
-      productVersion: '2'
-    };
-
-    if (typeof createUnityInstance !== 'function') {
-      throw new Error('Unity createUnityInstance function was not found.');
-    }
-
-    console.log('Starting Unity initialization...');
-
-    initTimeout = setTimeout(() => {
-      console.warn('Unity initialization is taking longer than 60 seconds.');
-      statusText.textContent = 'Unity is taking longer than expected...';
-    }, 60000);
-
-    unityInstance = await createUnityInstance(
-      canvas,
-      config,
-      progress => {
-        console.log('UNITY PROGRESS:', progress);
-
-        setProgress(
-          88 + progress * 12,
-          'Starting game... ' + Math.round(progress * 100) + '%'
+        throw new Error(
+          label + ' is not the expected raw file and could not be Brotli-decompressed: ' +
+          error.message
         );
       }
-    );
-
-    clearTimeout(initTimeout);
-
-    console.log('UNITY INITIALIZED SUCCESSFULLY');
-
-    window.unityInstance = unityInstance;
-    loading.classList.add('hidden');
-    resizeGame();
-
-  } catch (error) {
-    if (initTimeout !== null) {
-      clearTimeout(initTimeout);
     }
 
-    console.error('GAME LOADING FAILED:', error);
-    showError(error?.message || String(error));
-  }
-}
-    var loader = document.createElement('script');
-    loader.src = LOADER_FILE;
-    loader.onload = startGame;
-    loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
-    document.head.appendChild(loader);
+    async function startGame() {
+      if (startGameCalled) return;
+      startGameCalled = true;
+
+      let initTimeout = null;
+
+      try {
+        if (location.protocol === 'file:') {
+          throw new Error(
+            'Do not open this HTML by double-clicking it. Run it through a web server, ' +
+            'or upload the HTML and Build folder to GitHub Pages. For local testing, ' +
+            'open PowerShell in the game folder and run: python -m http.server 8000, ' +
+            'then visit http://localhost:8000.'
+          );
+        }
+
+        setProgress(1, 'Loading Brotli decoder...');
+        console.log('Loading Brotli decoder...');
+        const brotli = await getBrotliDecoder();
+
+        setProgress(3, 'Downloading DATA parts...');
+        const dataReceived = await loadSplitFile(DATA_BASE, DATA_PARTS, 'DATA', 3, 35);
+        const dataBytes = await decompressIfBrotli(
+          dataReceived,
+          brotli,
+          'DATA',
+          bytes => startsWithBytes(bytes, [
+            0x55,0x6E,0x69,0x74,0x79,0x57,0x65,
+            0x62,0x44,0x61,0x74,0x61,0x31,0x2E,0x30
+          ])
+        );
+
+        setProgress(36, 'Downloading WASM parts...');
+        const wasmReceived = await loadSplitFile(WASM_BASE, WASM_PARTS, 'WASM', 36, 72);
+        const wasmBytes = await decompressIfBrotli(
+          wasmReceived,
+          brotli,
+          'WASM',
+          bytes => startsWithBytes(bytes, [0x00,0x61,0x73,0x6D])
+        );
+
+        if (!startsWithBytes(wasmBytes, [0x00,0x61,0x73,0x6D])) {
+          const firstBytes = Array.from(wasmBytes.subarray(0, 16), byte =>
+            byte.toString(16).padStart(2, '0').toUpperCase()
+          ).join(' ');
+          throw new Error('WASM is not a binary WebAssembly file. First bytes: ' + firstBytes);
+        }
+
+        setProgress(73, 'Downloading Unity framework...');
+        console.log('Downloading framework:', FRAMEWORK_FILE);
+        const frameworkResponse = await fetch(FRAMEWORK_FILE, { cache: 'no-store' });
+        if (!frameworkResponse.ok) {
+          throw new Error('Could not fetch framework file: ' + FRAMEWORK_FILE +
+            ' (HTTP ' + frameworkResponse.status + ')');
+        }
+
+        const frameworkReceived = new Uint8Array(await frameworkResponse.arrayBuffer());
+        if (!frameworkReceived.length) throw new Error('Framework file is empty.');
+        const frameworkBytes = await decompressIfBrotli(
+          frameworkReceived,
+          brotli,
+          'FRAMEWORK',
+          isReadableText
+        );
+
+        console.log('DATA ready:', dataBytes.length, 'bytes');
+        console.log('WASM ready:', wasmBytes.length, 'bytes');
+        console.log('FRAMEWORK ready:', frameworkBytes.length, 'bytes');
+
+        setProgress(88, 'Preparing Unity...');
+        const config = {
+          dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
+          frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
+          codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
+          streamingAssetsUrl: buildUrl + 'StreamingAssets',
+          companyName: 'CrazyGames',
+          productName: 'Time Control',
+          productVersion: '2'
+        };
+
+        if (typeof createUnityInstance !== 'function') {
+          throw new Error('Unity loader loaded, but createUnityInstance was not found.');
+        }
+
+        console.log('Starting Unity initialization...');
+        initTimeout = setTimeout(() => {
+          console.warn('Unity initialization is taking longer than 60 seconds.');
+          statusText.textContent = 'Unity is taking longer than expected...';
+        }, 60000);
+
+        unityInstance = await createUnityInstance(canvas, config, progress => {
+          console.log('UNITY PROGRESS:', progress);
+          setProgress(
+            88 + progress * 12,
+            'Starting game... ' + Math.round(progress * 100) + '%'
+          );
+        });
+
+        clearTimeout(initTimeout);
+        initTimeout = null;
+        window.unityInstance = unityInstance;
+        console.log('UNITY INITIALIZED SUCCESSFULLY');
+        loading.classList.add('hidden');
+        resizeGame();
+
+      } catch (error) {
+        if (initTimeout !== null) clearTimeout(initTimeout);
+        console.error('GAME LOADING FAILED:', error);
+        showError(error?.stack || error?.message || String(error));
+      }
+    }
+
+    // Load the Unity loader exactly once.
+    const unityLoaderScript = document.createElement('script');
+    unityLoaderScript.src = LOADER_FILE;
+    unityLoaderScript.onload = () => {
+      console.log('Unity loader script loaded.');
+      startGame();
+    };
+    unityLoaderScript.onerror = () => {
+      showError('Could not load Unity loader: ' + LOADER_FILE +
+        '. Check that TCT_0_3_2_CG3.loader.js exists inside Build/.');
+    };
+    document.head.appendChild(unityLoaderScript);
 
     function resizeGame() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(canvas.clientWidth * ratio);
       canvas.height = Math.round(canvas.clientHeight * ratio);
     }
+
     window.addEventListener('resize', resizeGame);
     window.addEventListener('orientationchange', () => setTimeout(resizeGame, 150));
 
-    document.getElementById('fullscreen').addEventListener('click', async () => {
+    fullscreenButton.addEventListener('click', async () => {
       try {
         const target = document.getElementById('game-container');
-        if (!document.fullscreenElement) await target.requestFullscreen();
-        else await document.exitFullscreen();
+        if (!document.fullscreenElement) {
+          await target.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
       } catch (error) {
-        showError('Fullscreen is not available: ' + error.message);
+        showError('Fullscreen is not available: ' + (error.message || String(error)));
       }
     });
+
     document.addEventListener('fullscreenchange', () => {
-      document.getElementById('fullscreen').textContent = document.fullscreenElement ? '✕ Exit fullscreen' : '⛶ Fullscreen';
+      fullscreenButton.textContent = document.fullscreenElement ? '✕ Exit fullscreen' : '⛶ Fullscreen';
       setTimeout(resizeGame, 100);
     });
-    window.addEventListener('beforeunload', () => temporaryUrls.forEach(url => URL.revokeObjectURL(url)));
+
+    window.addEventListener('beforeunload', () => {
+      temporaryUrls.forEach(url => URL.revokeObjectURL(url));
+    });
+
+    window.addEventListener('error', event => {
+      console.error('Browser error:', event.message, event.filename, event.lineno);
+    });
+
+    window.addEventListener('unhandledrejection', event => {
+      console.error('Unhandled promise rejection:', event.reason);
+    });
   </script>
 </body>
 </html>
