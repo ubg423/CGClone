@@ -225,11 +225,14 @@ console.log(
           }
         }, 60000);
 
-        createUnityInstance(canvas, config, progress => {
-          setProgress(
-            88 + progress * 12,
-            'Starting game... ' + Math.round(progress * 100) + '%'
-          );
+createUnityInstance(canvas, config, progress => {
+  console.log("UNITY PROGRESS:", progress);
+
+  setProgress(
+    88 + progress * 12,
+    'Starting game... ' + Math.round(progress * 100) + '%'
+  );
+});
         }).then(instance => {
           initializationFinished = true;
           clearTimeout(timeout);
