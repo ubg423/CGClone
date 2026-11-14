@@ -76,8 +76,8 @@
     <script>
 
       const PART_FILES = [
-        { base: "TCT_0_3_2_CG3.data.br", label: "CheeseRolling.data" },
-        { base: "TCT_0_3_2_CG3.wasm.br", label: "CheeseRolling.wasm" },
+        { base: "./Build/TCT_0_3_2_CG3.data.br", label: "CheeseRolling.data" },
+        { base: "./Build/TCT_0_3_2_CG3.wasm.br", label: "CheeseRolling.wasm" },
       ];
 
       const assembledBlobs = {};
@@ -218,7 +218,7 @@
           updateBannerVisibility();
         }
 
-        var buildUrl = "Build";
+        var buildUrl = "./Build/";
         var loaderUrl = buildUrl + "/TCT_0_3_2_CG3.loader.js";
         var config = {
           dataUrl:
