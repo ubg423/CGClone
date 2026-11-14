@@ -104,19 +104,9 @@
         document.getElementById("status-" + id).textContent = text;
       }
 
-      async function countParts(base) {
-        let n = 1;
-        while (true) {
-          const partName = `${base}.part${String(n).padStart(3, "0")}`;
-          const res = await fetch(partName, { method: "HEAD" });
-          if (!res.ok) break;
-          n++;
-        }
-        if (n === 1) {
-          return 0;
-        }
-        return n - 1;
-      }
+async function countParts(base) {
+  return 3;
+}
 
       async function fetchPart(url, onProgress) {
         const res = await fetch(url);
