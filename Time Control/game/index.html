@@ -243,6 +243,11 @@ var config = {
 console.log("FRAMEWORK:", config.frameworkUrl);
 console.log("WASM:", config.codeUrl);
           createUnityInstance(canvas, config, (progress) => {
+            console.log("FULL UNITY CONFIG:", config);
+console.log("DATA URL:", config.dataUrl);
+console.log("WASM URL:", config.codeUrl);
+console.log("FRAMEWORK URL:", config.frameworkUrl);
+console.log("LOADER URL:", loaderUrl);
             progressBarFull.style.width = 100 * progress + "%";
           })
             .then((unityInstance) => {
