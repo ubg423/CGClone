@@ -239,6 +239,9 @@ var config = {
         var script = document.createElement("script");
         script.src = loaderUrl;
         script.onload = () => {
+          console.log("DATA:", config.dataUrl);
+console.log("FRAMEWORK:", config.frameworkUrl);
+console.log("WASM:", config.codeUrl);
           createUnityInstance(canvas, config, (progress) => {
             progressBarFull.style.width = 100 * progress + "%";
           })
