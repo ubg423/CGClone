@@ -216,17 +216,14 @@ return new Blob(blobs, { type: mimeType });
         var loaderUrl = buildUrl + "/TCT_0_3_2_CG3.loader.js";
 var config = {
   dataUrl: assembledBlobs["./Build/TCT_0_3_2_CG3.data.br"],
-  frameworkUrl: buildUrl + "TCT_0_3_2_CG3.framework.js.br",
+  frameworkUrl: assembledBlobs["./Build/TCT_0_3_2_CG3.framework.js.br"],
   codeUrl: assembledBlobs["./Build/TCT_0_3_2_CG3.wasm.br"],
 
   streamingAssetsUrl: "StreamingAssets",
   companyName: "YCP",
   productName: "Time Control",
   productVersion: "v1.5.1",
-  showBanner: unityShowBanner,
-
-  // Disable WebAssembly streaming compilation
-  streamingAssetsUrl: "StreamingAssets"
+  showBanner: unityShowBanner
 };
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
