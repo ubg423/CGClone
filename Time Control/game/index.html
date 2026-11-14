@@ -204,9 +204,18 @@
         }
 
         createUnityInstance(canvas, config, progress => {
+          console.log("=== UNITY DIAGNOSTICS ===");
+console.log("Canvas:", canvas);
+console.log("DATA size:", dataBytes.length);
+console.log("WASM size:", wasmBytes.length);
+console.log("Framework size:", frameworkBytes.length);
+console.log("WASM signature:", Array.from(wasmBytes.slice(0, 4)));
+console.log("Unity loader:", typeof createUnityInstance);
+console.log("=========================");
           setProgress(88 + progress * 12, 'Starting game... ' + Math.round(progress * 100) + '%');
         }).then(instance => {
           unityInstance = instance;
+          console.log("UNITY INSTANCE CREATED");
           window.unityInstance = instance;
           loading.classList.add('hidden');
           resizeGame();
