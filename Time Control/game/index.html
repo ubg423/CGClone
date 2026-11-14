@@ -256,13 +256,13 @@ console.log(
       }
     }
 
-    const loader = document.createElement('script');
+    var loader = document.createElement('script');
     loader.src = LOADER_FILE;
     loader.onload = startGame;
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
     document.head.appendChild(loader);
 
-    const loader = document.createElement('script');
+    var loader = document.createElement('script');
     loader.src = LOADER_FILE;
     loader.onload = startGame;
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
