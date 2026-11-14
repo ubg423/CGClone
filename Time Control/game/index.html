@@ -159,106 +159,124 @@
       }
     }
 
-    async function startGame() {
-      try {
-        setProgress(1, 'Loading Brotli decoder...');
-        const brotli = await getBrotliDecoder();
+    aasync function startGame() {
+  let initTimeout = null;
 
-        setProgress(3, 'Downloading DATA parts...');
-        const dataReceived = await loadSplitFile(DATA_BASE, DATA_PARTS, 'DATA', 3, 35);
-        // Unity data archives begin with the ASCII header "UnityWebData1.0".
-        const dataBytes = await decompressIfBrotli(dataReceived, brotli, 'DATA',
-          bytes => startsWithBytes(bytes, [0x55,0x6E,0x69,0x74,0x79,0x57,0x65,0x62,0x44,0x61,0x74,0x61,0x31,0x2E,0x30]));
+  try {
+    setProgress(1, 'Loading Brotli decoder...');
+    const brotli = await getBrotliDecoder();
 
-        setProgress(36, 'Downloading WASM parts...');
-        const wasmReceived = await loadSplitFile(WASM_BASE, WASM_PARTS, 'WASM', 36, 72);
-        // Binary WebAssembly starts with 00 61 73 6D (\0asm).
-        const wasmBytes = await decompressIfBrotli(wasmReceived, brotli, 'WASM',
-          bytes => startsWithBytes(bytes, [0x00,0x61,0x73,0x6D]));
-        if (!startsWithBytes(wasmBytes, [0x00,0x61,0x73,0x6D])) {
-          if (isReadableText(wasmBytes) && new TextDecoder().decode(wasmBytes.subarray(0, 20)).trimStart().startsWith('(module')) {
-            throw new Error('The joined WASM parts contain WAT text beginning with "(module", not binary WebAssembly. Compile that WAT into a .wasm binary with wat2wasm first, then split the compiled .wasm into 3 parts.');
-          }
-          throw new Error('WASM file does not start with the binary WebAssembly signature 00 61 73 6D. First bytes: ' + Array.from(wasmBytes.subarray(0, 16), b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
-        }
+    setProgress(3, 'Downloading DATA parts...');
+    const dataReceived = await loadSplitFile(
+      DATA_BASE, DATA_PARTS, 'DATA', 3, 35
+    );
 
-        setProgress(73, 'Downloading Unity framework...');
-        const frameworkResponse = await fetch(FRAMEWORK_FILE, { cache: 'no-store' });
-        if (!frameworkResponse.ok) throw new Error('Could not fetch framework file: ' + FRAMEWORK_FILE + ' (HTTP ' + frameworkResponse.status + ')');
-        const frameworkReceived = new Uint8Array(await frameworkResponse.arrayBuffer());
-        const frameworkBytes = await decompressIfBrotli(frameworkReceived, brotli, 'FRAMEWORK', isReadableText);
-        console.log("DATA decompressed:", dataBytes.length);
-console.log("WASM decompressed:", wasmBytes.length);
-console.log("FRAMEWORK decompressed:", frameworkBytes.length);
+    const dataBytes = await decompressIfBrotli(
+      dataReceived,
+      brotli,
+      'DATA',
+      bytes => startsWithBytes(bytes, [
+        0x55,0x6E,0x69,0x74,0x79,0x57,0x65,
+        0x62,0x44,0x61,0x74,0x61,0x31,0x2E,0x30
+      ])
+    );
 
-console.log(
-  "WASM valid:",
-  wasmBytes[0] === 0 &&
-  wasmBytes[1] === 97 &&
-  wasmBytes[2] === 115 &&
-  wasmBytes[3] === 109
-);
+    setProgress(36, 'Downloading WASM parts...');
+    const wasmReceived = await loadSplitFile(
+      WASM_BASE, WASM_PARTS, 'WASM', 36, 72
+    );
 
-        setProgress(88, 'Preparing Unity...');
-        const config = {
-          dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
-          frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
-          codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
-          streamingAssetsUrl: buildUrl + 'StreamingAssets',
-          companyName: 'CrazyGames',
-          productName: 'Toilets Worms Shooter',
-          productVersion: '2'
-        };
+    const wasmBytes = await decompressIfBrotli(
+      wasmReceived,
+      brotli,
+      'WASM',
+      bytes => startsWithBytes(bytes, [0x00,0x61,0x73,0x6D])
+    );
 
-        if (typeof createUnityInstance !== 'function') {
-          throw new Error('Unity loader loaded, but createUnityInstance was not found.');
-        }
-
-        console.log("Starting Unity initialization...");
-
-        let initializationFinished = false;
-
-        const timeout = setTimeout(function() {
-          if (!initializationFinished) {
-            console.error("Unity initialization is taking longer than 60 seconds.");
-            statusText.textContent = "Unity is taking longer than expected...";
-          }
-        }, 60000);
-
-createUnityInstance(canvas, config, progress => {
-  console.log("UNITY PROGRESS:", progress);
-
-  setProgress(
-    88 + progress * 12,
-    'Starting game... ' + Math.round(progress * 100) + '%'
-  );
-});
-        }).then(instance => {
-          initializationFinished = true;
-          clearTimeout(timeout);
-
-          console.log("UNITY INITIALIZED SUCCESSFULLY");
-
-          unityInstance = instance;
-          window.unityInstance = instance;
-
-          loading.classList.add('hidden');
-          resizeGame();
-
-        }).catch(error => {
-          initializationFinished = true;
-          clearTimeout(timeout);
-
-          console.error("UNITY INITIALIZATION FAILED:", error);
-          showError(error?.message || String(error));
-        });
-
-      } catch (error) {
-        console.error("GAME LOADING FAILED:", error);
-        showError(error?.message || String(error));
-      }
+    if (!startsWithBytes(wasmBytes, [0x00,0x61,0x73,0x6D])) {
+      throw new Error('Invalid WebAssembly file. Check your WASM parts.');
     }
 
+    setProgress(73, 'Downloading Unity framework...');
+
+    const frameworkResponse = await fetch(FRAMEWORK_FILE, {
+      cache: 'no-store'
+    });
+
+    if (!frameworkResponse.ok) {
+      throw new Error(
+        'Could not fetch framework: HTTP ' + frameworkResponse.status
+      );
+    }
+
+    const frameworkReceived = new Uint8Array(
+      await frameworkResponse.arrayBuffer()
+    );
+
+    const frameworkBytes = await decompressIfBrotli(
+      frameworkReceived,
+      brotli,
+      'FRAMEWORK',
+      isReadableText
+    );
+
+    console.log('DATA decompressed:', dataBytes.length);
+    console.log('WASM decompressed:', wasmBytes.length);
+    console.log('FRAMEWORK decompressed:', frameworkBytes.length);
+
+    setProgress(88, 'Preparing Unity...');
+
+    const config = {
+      dataUrl: makeObjectUrl(dataBytes, 'application/octet-stream'),
+      frameworkUrl: makeObjectUrl(frameworkBytes, 'application/javascript'),
+      codeUrl: makeObjectUrl(wasmBytes, 'application/wasm'),
+      streamingAssetsUrl: buildUrl + 'StreamingAssets',
+      companyName: 'CrazyGames',
+      productName: 'Time Control',
+      productVersion: '2'
+    };
+
+    if (typeof createUnityInstance !== 'function') {
+      throw new Error('Unity createUnityInstance function was not found.');
+    }
+
+    console.log('Starting Unity initialization...');
+
+    initTimeout = setTimeout(() => {
+      console.warn('Unity initialization is taking longer than 60 seconds.');
+      statusText.textContent = 'Unity is taking longer than expected...';
+    }, 60000);
+
+    unityInstance = await createUnityInstance(
+      canvas,
+      config,
+      progress => {
+        console.log('UNITY PROGRESS:', progress);
+
+        setProgress(
+          88 + progress * 12,
+          'Starting game... ' + Math.round(progress * 100) + '%'
+        );
+      }
+    );
+
+    clearTimeout(initTimeout);
+
+    console.log('UNITY INITIALIZED SUCCESSFULLY');
+
+    window.unityInstance = unityInstance;
+    loading.classList.add('hidden');
+    resizeGame();
+
+  } catch (error) {
+    if (initTimeout !== null) {
+      clearTimeout(initTimeout);
+    }
+
+    console.error('GAME LOADING FAILED:', error);
+    showError(error?.message || String(error));
+  }
+}
     var loader = document.createElement('script');
     loader.src = LOADER_FILE;
     loader.onload = startGame;
