@@ -44,13 +44,13 @@
     const progressBar = document.getElementById('progress-bar');
     const statusText = document.getElementById('status');
     const errorBox = document.getElementById('error');
-(async function checkCrazyGamesEnvironment() {
+const crazyGamesReady = (async function checkCrazyGamesEnvironment() {
   const display = document.getElementById('sdk-environment');
 
   try {
     if (!window.CrazyGames?.SDK) {
       display.textContent = 'CrazyGames SDK not detected';
-      return;
+      return 'missing';
     }
 
     await window.CrazyGames.SDK.init();
@@ -61,9 +61,13 @@
 
     console.log('INITIALIZED SDK ENVIRONMENT:', environment);
 
+    return environment;
+
   } catch (error) {
     display.textContent = 'SDK initialization failed: ' + error.message;
     console.error('SDK initialization error:', error);
+
+    return 'initialization failed';
   }
 })();
     const fullscreenButton = document.getElementById('fullscreen');
