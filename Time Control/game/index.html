@@ -187,6 +187,17 @@
         if (!frameworkResponse.ok) throw new Error('Could not fetch framework file: ' + FRAMEWORK_FILE + ' (HTTP ' + frameworkResponse.status + ')');
         const frameworkReceived = new Uint8Array(await frameworkResponse.arrayBuffer());
         const frameworkBytes = await decompressIfBrotli(frameworkReceived, brotli, 'FRAMEWORK', isReadableText);
+        console.log("DATA decompressed:", dataBytes.length);
+console.log("WASM decompressed:", wasmBytes.length);
+console.log("FRAMEWORK decompressed:", frameworkBytes.length);
+
+console.log(
+  "WASM valid:",
+  wasmBytes[0] === 0 &&
+  wasmBytes[1] === 97 &&
+  wasmBytes[2] === 115 &&
+  wasmBytes[3] === 109
+);
 
         setProgress(88, 'Preparing Unity...');
         const config = {
@@ -203,17 +214,44 @@
           throw new Error('Unity loader loaded, but createUnityInstance was not found.');
         }
 
-        createUnityInstance(canvas, config, progress => {
-          console.log("=== UNITY DIAGNOSTICS ===");
-console.log("Canvas:", canvas);
-console.log("DATA size:", dataBytes.length);
-console.log("WASM size:", wasmBytes.length);
-console.log("Framework size:", frameworkBytes.length);
-console.log("WASM signature:", Array.from(wasmBytes.slice(0, 4)));
-console.log("Unity loader:", typeof createUnityInstance);
-console.log("=========================");
-          setProgress(88 + progress * 12, 'Starting game... ' + Math.round(progress * 100) + '%');
-        }).then(instance => {
+console.log("Starting Unity initialization...");
+
+let initializationFinished = false;
+
+const timeout = setTimeout(() => {
+  if (!initializationFinished) {
+    console.error("Unity initialization is taking longer than 60 seconds.");
+    statusText.textContent = "Unity is taking longer than expected...";
+  }
+}, 60000);
+
+createUnityInstance(canvas, config, progress => {
+  setProgress(
+    88 + progress * 12,
+    'Starting game... ' + Math.round(progress * 100) + '%'
+  );
+}).then(instance => {
+
+  initializationFinished = true;
+  clearTimeout(timeout);
+
+  console.log("UNITY INITIALIZED SUCCESSFULLY");
+
+  unityInstance = instance;
+  window.unityInstance = instance;
+
+  loading.classList.add('hidden');
+  resizeGame();
+
+}).catch(error => {
+
+  initializationFinished = true;
+  clearTimeout(timeout);
+
+  console.error("UNITY INITIALIZATION FAILED:", error);
+
+  showError(error?.message || String(error));
+});
           unityInstance = instance;
           console.log("UNITY INSTANCE CREATED");
           window.unityInstance = instance;
