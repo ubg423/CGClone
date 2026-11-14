@@ -262,12 +262,6 @@ console.log(
     loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
     document.head.appendChild(loader);
 
-    var loader = document.createElement('script');
-    loader.src = LOADER_FILE;
-    loader.onload = startGame;
-    loader.onerror = () => showError('Could not load Unity loader: ' + LOADER_FILE + '. Check that it exists in Build/.');
-    document.head.appendChild(loader);
-
     function resizeGame() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(canvas.clientWidth * ratio);
