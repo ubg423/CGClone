@@ -332,10 +332,15 @@ const crazyGamesReady = (async function checkCrazyGamesEnvironment() {
     // Load the Unity loader exactly once.
     const unityLoaderScript = document.createElement('script');
     unityLoaderScript.src = LOADER_FILE;
-    unityLoaderScript.onload = () => {
-      console.log('Unity loader script loaded.');
-      startGame();
-    };
+unityLoaderScript.onload = async () => {
+  console.log('Unity loader script loaded.');
+
+  const environment = await crazyGamesReady;
+
+  console.log('SDK environment before Unity:', environment);
+
+  startGame();
+};
     unityLoaderScript.onerror = () => {
       showError('Could not load Unity loader: ' + LOADER_FILE +
         '. Check that TCT_0_3_2_CG3.loader.js exists inside Build/.');
